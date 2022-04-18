@@ -4,6 +4,9 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -20,6 +23,12 @@ async function main() {
   await greeter.deployed();
 
   console.log("Greeter deployed to:", greeter.address);
+  console.log(
+    "Checkout deployment code via: " +
+      process.env.BSCSCAN_TESTNET_URL +
+      "address/" +
+      greeter.address
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
