@@ -27,6 +27,14 @@ contract Ownable is OwnableOpenzeppelin {
 
 
   /**
+  * @dev Address address in white list
+  * Can only be called by the current owner.
+  */
+  function isInWhiteList(address _address) external view returns(bool) {
+    return _whiteList[_address];
+  }
+
+  /**
   * @dev Remove address from white list
   * Can only be called by the current owner.
   */
