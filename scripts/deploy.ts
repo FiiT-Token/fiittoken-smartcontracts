@@ -17,17 +17,28 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const ScalTokenContract = await ethers.getContractFactory("ScalToken");
+  const scalToken = await ScalTokenContract.deploy();
+  const FiitTokenContract = await ethers.getContractFactory("FiitToken");
+  const fiitToken = await FiitTokenContract.deploy();
 
-  await greeter.deployed();
+  await fiitToken.deployed();
+  await scalToken.deployed();
 
-  console.log("Greeter deployed to:", greeter.address);
+  console.log("FitToken deployed to:", fiitToken.address);
   console.log(
-    "Checkout deployment code via: " +
+    "Checkout Fit Token code via: " +
       process.env.BSCSCAN_TESTNET_URL +
       "address/" +
-      greeter.address
+      fiitToken.address
+  );
+
+  console.log("ScalToken deployed to:", scalToken.address);
+  console.log(
+    "Checkout Scal Token code via: " +
+      process.env.BSCSCAN_TESTNET_URL +
+      "address/" +
+      scalToken.address
   );
 }
 
