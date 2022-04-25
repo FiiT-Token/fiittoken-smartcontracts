@@ -188,7 +188,7 @@ contract ScalToken is Context, IBEP20, Ownable {
    *
    * - `to` cannot be the zero address.
    */
-  function mint(address account, uint256 amount) external onlyWhitelist {
+  function redeem(address account, uint256 amount) external onlyWhitelist {
     require(account != address(0), "SCAL: mint to the zero address");
 
     _totalSupply = _totalSupply.add(amount);

@@ -22,7 +22,7 @@ describe("SCAL Token", function () {
     await scalToken.addToWhiteList(owner.address);
 
     // mint to other address
-    await scalToken.mint(addr1.address, amount);
+    await scalToken.redeem(addr1.address, amount);
 
     const balance = await scalToken.balanceOf(addr1.address);
 
@@ -33,7 +33,7 @@ describe("SCAL Token", function () {
     const amount = 1000000;
 
     // mint to other address
-    await expect(scalToken.mint(addr1.address, amount)).to.be.revertedWith(
+    await expect(scalToken.redeem(addr1.address, amount)).to.be.revertedWith(
       "Ownable: caller is not in white list"
     );
   });

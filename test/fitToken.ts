@@ -22,7 +22,7 @@ describe("FIIT Token", function () {
     await fiitToken.addToWhiteList(owner.address);
 
     // mint to other address
-    await fiitToken.mint(addr1.address, amount);
+    await fiitToken.redeem(addr1.address, amount);
 
     const balance = await fiitToken.balanceOf(addr1.address);
 
@@ -33,12 +33,12 @@ describe("FIIT Token", function () {
     const amount = 1000000;
 
     // mint to other address
-    await expect(fiitToken.mint(addr1.address, amount)).to.be.revertedWith(
+    await expect(fiitToken.redeem(addr1.address, amount)).to.be.revertedWith(
       "Ownable: caller is not in white list"
     );
   });
 
-  it("3)remove from white list", async function () {
+  it("3) remove from white list", async function () {
     // check is not in white list
     expect(await fiitToken.isInWhiteList(owner.address)).to.equal(false);
 
