@@ -82,9 +82,14 @@ interface IBEP20 {
 
 
     /**
-     * @dev Add total supply and send balance to account
+     * @dev redeem token with point
      */
     function redeem(address account, uint256 amount) external;
+    
+    /**
+     * @dev Convert token to point
+     */
+    function convertToPoint(address account, uint256 amount) external;
 
     /**
      * @dev Emitted when `value` tokens are moved from one account (`from`) to

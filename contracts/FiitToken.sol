@@ -17,6 +17,9 @@ contract FiitToken is Context, IBEP20, Ownable {
   mapping (address => mapping (address => uint256)) private _allowances;
 
   uint256 private _totalSupply;
+  uint256 private _maxSupply;
+  uint256 private _totalEarnSupply;
+  uint256 private _maxEarnSupply;
   uint8 public _decimals;
   string public _symbol;
   string public _name;
@@ -25,10 +28,9 @@ contract FiitToken is Context, IBEP20, Ownable {
     _name = "FIIT Token";
     _symbol = "FIIT";
     _decimals = 18;
-    _totalSupply = 500000000000000000000000000;    // 500 million
-    _balances[msg.sender] = _totalSupply;
-
-    emit Transfer(address(0), msg.sender, _totalSupply);
+    _maxEarnSupply = 150000000 * (10 ** _decimals);
+    _totalSupply = 500000000 * (10 ** _decimals); // 500 million
+    _totalEarnSupply = _maxEarnSupply;    // 150 million available to redeem by point
   }
 
   /**
@@ -182,8 +184,8 @@ contract FiitToken is Context, IBEP20, Ownable {
     emit Transfer(sender, recipient, amount);
   }
 
-  /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-   * the total supply.
+  /** @dev Exchange FiiT point to token
+   * substract totalEarnSupply
    *
    * Emits a {Transfer} event with `from` set to the zero address.
    *
@@ -193,10 +195,20 @@ contract FiitToken is Context, IBEP20, Ownable {
    */
   function redeem(address account, uint256 amount) external onlyWhitelist {
     require(account != address(0), "FIIT: mint to the zero address");
+    require(_totalEarnSupply >= amount, "FIIT: Exceed maximum redeem"); 
 
-    _totalSupply = _totalSupply.add(amount);
+    _totalSupply = _totalSupply.sub(amount);
+    _totalEarnSupply = _totalEarnSupply.sub(amount);
     _balances[account] = _balances[account].add(amount);
     emit Transfer(address(0), account, amount);
+  }
+
+  function convertToPoint(address account, uint256 amount) external onlyWhitelist {
+    require(_totalEarnSupply + amount <= _maxEarnSupply, "FIIT: Exceed max convert");
+
+    _totalEarnSupply = _totalEarnSupply.add(amount);
+    _totalSupply = _totalSupply.sub(amount);
+    _burn(account, amount);
   }
 
   /**

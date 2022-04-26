@@ -179,8 +179,7 @@ contract ScalToken is Context, IBEP20, Ownable {
     emit Transfer(sender, recipient, amount);
   }
 
-  /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-   * the total supply.
+  /** @dev Exchange scal point to token
    *
    * Emits a {Transfer} event with `from` set to the zero address.
    *
@@ -194,6 +193,10 @@ contract ScalToken is Context, IBEP20, Ownable {
     _totalSupply = _totalSupply.add(amount);
     _balances[account] = _balances[account].add(amount);
     emit Transfer(address(0), account, amount);
+  }
+
+  function convertToPoint(address account, uint256 amount) external onlyWhitelist {
+    return _burn(account, amount);
   }
 
   /**

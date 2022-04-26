@@ -29,7 +29,24 @@ describe("FIIT Token", function () {
     expect(balance.toNumber()).to.equal(amount);
   });
 
-  it("2) mint token without add to white list", async function () {
+  it("2) Redeem token exceed limit", async function () {
+    const amount = 150000000;
+
+    // add address to white list
+    await fiitToken.addToWhiteList(owner.address);
+
+    await fiitToken.redeem(
+      addr1.address,
+      ethers.utils.parseEther(amount.toString())
+    );
+
+    // mint to other address
+    await expect(
+      fiitToken.redeem(addr1.address, ethers.utils.parseEther("1"))
+    ).to.be.revertedWith("FIIT: Exceed maximum redeem");
+  });
+
+  it("3) mint token without add to white list", async function () {
     const amount = 1000000;
 
     // mint to other address
@@ -38,7 +55,7 @@ describe("FIIT Token", function () {
     );
   });
 
-  it("3) remove from white list", async function () {
+  it("4) remove from white list", async function () {
     // check is not in white list
     expect(await fiitToken.isInWhiteList(owner.address)).to.equal(false);
 
@@ -52,5 +69,37 @@ describe("FIIT Token", function () {
 
     // check is not in white list
     expect(await fiitToken.isInWhiteList(owner.address)).to.equal(false);
+  });
+
+  it("5) convert token to point", async function () {
+    const amount = 1000000;
+
+    // add address to white list
+    await fiitToken.addToWhiteList(owner.address);
+
+    // mint to other address
+    await fiitToken.redeem(addr1.address, amount);
+
+    const balance = await fiitToken.balanceOf(addr1.address);
+
+    expect(balance.toNumber()).to.equal(amount);
+
+    // mint to other address
+    await fiitToken.convertToPoint(addr1.address, amount);
+
+    const newBalance = await fiitToken.balanceOf(addr1.address);
+
+    expect(newBalance.toNumber()).to.equal(0);
+  });
+
+  it("6) convert token exceed limit ", async function () {
+    const amount = 1000000;
+
+    // add address to white list
+    await fiitToken.addToWhiteList(owner.address);
+
+    await expect(
+      fiitToken.convertToPoint(addr1.address, amount)
+    ).to.be.revertedWith("FIIT: Exceed max convert");
   });
 });

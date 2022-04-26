@@ -69,6 +69,21 @@ contract VerifySignature is Ownable{
             );
     }
 
+    function _verify(
+        address to,
+        address token,
+        uint256 amount,
+        uint256 nonce,
+        bytes memory signature
+    ) internal view returns (bool) {
+        bytes32 messageHash = getMessageHash(to, token, amount, nonce);
+        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
+        
+        // Check signature is sign by authorize signer
+        return recoverSigner(ethSignedMessageHash, signature) == owner();
+    }
+
+
     /* 4. Verify signature
     signer = 0xB273216C05A8c0D4F0a4Dd0d7Bae1D2EfFE636dd
     to = 0x14723A09ACff6D2A60DcdF7aA4AFf308FDDC160C
@@ -85,16 +100,28 @@ contract VerifySignature is Ownable{
         uint256 nonce,
         bytes memory signature
     ) external {
-        bytes32 messageHash = getMessageHash(to, token, amount, nonce);
-        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
-        
         // Check signature is sign by authorize signer
-        bool isValid = recoverSigner(ethSignedMessageHash, signature) == owner();
+        bool isValid = _verify(to,token,amount,nonce,signature);
 
         require(isValid, "Verify: Not authorize address");
 
         if (isValid) {
-          IBEP20(token).redeem(to, amount);
+            IBEP20(token).redeem(to, amount);
+        }
+    }
+
+    function verifyAndBurn(
+        address to,
+        address token,
+        uint256 amount,
+        uint256 nonce,
+        bytes memory signature
+    ) external {
+        bool isValid = _verify(to,token,amount,nonce,signature);
+        require(isValid, "Verify: Not authorize address");
+
+        if (isValid) {
+            IBEP20(token).convertToPoint(to, amount);
         }
     }
 
