@@ -40,6 +40,19 @@ async function main() {
       "address/" +
       scalToken.address
   );
+
+  const OriginOfDragonsContract = await ethers.getContractFactory(
+    "OriginOfDragons"
+  );
+  const originOfDragons = await OriginOfDragonsContract.deploy();
+
+  console.log("nft deployed to:", originOfDragons.address);
+  console.log(
+    "Checkout nft Token code via: " +
+      process.env.BSCSCAN_TESTNET_URL +
+      "address/" +
+      originOfDragons.address
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

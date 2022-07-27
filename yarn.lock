@@ -3729,6 +3729,11 @@
   "resolved" "https://registry.npmjs.org/env-paths/-/env-paths-2.2.1.tgz"
   "version" "2.2.1"
 
+"erc721a@^4.2.0":
+  "integrity" "sha512-b3MCLFMKQ+gVlRr7BUP6p4li5+ujbVZR6bSdOPtwZ6+9gAgYxXxHp0yaUPPvFpVQQVdlU8/LKQmGrrPhESGwWg=="
+  "resolved" "https://registry.npmjs.org/erc721a/-/erc721a-4.2.0.tgz"
+  "version" "4.2.0"
+
 "errno@~0.1.1":
   "integrity" "sha512-dJ6oBr5SQ1VSd9qkk7ByRgb/1SH4JZjCHSW/mr63/QcXO9zLVxvJ6Oy13nio03rxpSnVDDjFor75SjVeZWPW/A=="
   "resolved" "https://registry.npmjs.org/errno/-/errno-0.1.8.tgz"
