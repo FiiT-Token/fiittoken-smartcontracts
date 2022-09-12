@@ -16,7 +16,7 @@ describe("Verify Contract", function () {
       "FiitTokenDrakonPlus"
     );
 
-    drakonContract = await FiitTokenDrakonPlusContact.deploy("https://");
+    drakonContract = await FiitTokenDrakonPlusContact.deploy();
     await drakonContract.deployed();
   });
 

@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -21,9 +20,7 @@ contract FiitTokenDrakonPlus is ERC721A, Ownable {
     
     string public baseTokenURI;
     
-    constructor(string memory baseURI) ERC721A("FiitTokenDrakonPlus", "FTDP") {
-        setBaseURI(baseURI);
-    }
+    constructor() ERC721A("FiitTokenDrakonPlus", "FTDP") {}
 
     function recoverSigner(bytes32 hash, bytes memory signature) public pure returns (address) {
         bytes32 messageDigest = keccak256(
