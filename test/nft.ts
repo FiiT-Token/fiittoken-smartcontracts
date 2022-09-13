@@ -8,6 +8,7 @@ describe("Verify Contract", function () {
   let addr2: SignerWithAddress;
 
   let drakonContract: any;
+  let nftConverterContact: any;
 
   beforeEach("deploy contract", async () => {
     [owner, addr1, addr2] = await ethers.getSigners();
@@ -18,6 +19,15 @@ describe("Verify Contract", function () {
 
     drakonContract = await FiitTokenDrakonPlusContact.deploy();
     await drakonContract.deployed();
+
+    const NftConverterContact = await ethers.getContractFactory("NftConverter");
+
+    nftConverterContact = await NftConverterContact.deploy(
+      drakonContract.address,
+      owner.address
+    );
+
+    await nftConverterContact.deployed();
   });
 
   it("1) Success: Reserved Nft", async function () {
@@ -36,45 +46,75 @@ describe("Verify Contract", function () {
     await drakonContract.reserveNFTs(amount);
 
     // Compute hash of the address
-    const messageHash = await drakonContract.getMessageHash(
+    const messageHash = await nftConverterContact.getMessageHash(
       addr1.address,
       tokenId, // token id
       nonce // nonce
     );
 
-    await drakonContract.approve(
-      addr1.address,
-      tokenId // nonce
-    );
+    // set approve for nft converter contact can transfer owner to another address
+    await drakonContract.setApprovalForAll(nftConverterContact.address, true);
 
     // Sign the hashed address
     const messageBytes = ethers.utils.arrayify(messageHash);
     const signature = await owner.signMessage(messageBytes);
 
-    await drakonContract.connect(addr1).exportNft(tokenId, nonce, signature);
+    await nftConverterContact
+      .connect(addr1)
+      .exportNft(tokenId, nonce, signature);
 
     const tokenOneOwnerAddress = await drakonContract.ownerOf(tokenId);
 
     expect(tokenOneOwnerAddress).to.equal(addr1.address);
   });
 
-  it("3) Failed: Export Nft wrong signature", async function () {
+  it("3) Failed: Address request signature not same with address use signature", async function () {
     const amount = 1;
+    const tokenId = 0;
+    const nonce = 1;
     await drakonContract.reserveNFTs(amount);
 
     // Compute hash of the address
-    const messageHash = await drakonContract.getMessageHash(
+    const messageHash = await nftConverterContact.getMessageHash(
       addr1.address,
-      0, // token id
-      1 // nonce
+      tokenId, // token id
+      nonce // nonce
     );
+
+    // set approve for nft converter contact can transfer owner to another address
+    await drakonContract.setApprovalForAll(nftConverterContact.address, true);
 
     // Sign the hashed address
     const messageBytes = ethers.utils.arrayify(messageHash);
     const signature = await owner.signMessage(messageBytes);
 
     await expect(
-      drakonContract.connect(addr2).exportNft(0, messageHash, signature)
+      nftConverterContact.connect(addr2).exportNft(tokenId, nonce, signature)
+    ).to.be.revertedWith("Export: Invalid signature");
+  });
+
+  it("4) Failed: Wrong signer", async function () {
+    const amount = 1;
+    const tokenId = 0;
+    const nonce = 1;
+    await drakonContract.reserveNFTs(amount);
+
+    // Compute hash of the address
+    const messageHash = await nftConverterContact.getMessageHash(
+      addr1.address,
+      tokenId, // token id
+      nonce // nonce
+    );
+
+    // set approve for nft converter contact can transfer owner to another address
+    await drakonContract.setApprovalForAll(nftConverterContact.address, true);
+
+    // Sign the hashed address
+    const messageBytes = ethers.utils.arrayify(messageHash);
+    const signature = await addr1.signMessage(messageBytes);
+
+    await expect(
+      nftConverterContact.connect(addr2).exportNft(tokenId, nonce, signature)
     ).to.be.revertedWith("Export: Invalid signature");
   });
 });

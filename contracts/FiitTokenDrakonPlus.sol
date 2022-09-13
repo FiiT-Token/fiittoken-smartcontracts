@@ -22,16 +22,6 @@ contract FiitTokenDrakonPlus is ERC721A, Ownable {
     
     constructor() ERC721A("FiitTokenDrakonPlus", "FTDP") {}
 
-    function recoverSigner(bytes32 hash, bytes memory signature) public pure returns (address) {
-        bytes32 messageDigest = keccak256(
-            abi.encodePacked(
-                "\x19Ethereum Signed Message:\n32", 
-                hash
-            )
-        );
-        return ECDSA.recover(messageDigest, signature);
-    }
-
     function reserveNFTs(uint256 amount) public onlyOwner {
         uint totalMinted = _tokenIds.current();
 
@@ -43,28 +33,7 @@ contract FiitTokenDrakonPlus is ERC721A, Ownable {
     function _baseURI() internal view virtual override returns (string memory) {
         return baseTokenURI;
     }
-    
-    // create message hash eth
-    function getMessageHash(
-        address to,
-        uint256 tokenId,
-        uint256 nonce
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(to, tokenId, nonce));
-    }
 
-    function exportNft(uint tokenId, uint256 nonce, bytes memory signature) public {
-        bytes32 messageHash = getMessageHash(
-            msg.sender,
-            tokenId, // token id
-            nonce
-        );
-
-        require(recoverSigner(messageHash, signature) == owner(), "Export: Invalid signature");
-
-        safeTransferFrom(owner(), msg.sender, tokenId, "");
-    }
-    
    function setBaseURI(string memory _baseTokenURI) public onlyOwner {
         baseTokenURI = _baseTokenURI;
     }
@@ -78,13 +47,6 @@ contract FiitTokenDrakonPlus is ERC721A, Ownable {
 
         _safeMint(msg.sender, _count);
     }
-    
-    // function _mintSingleNFT() private {
-    //     uint newTokenID = _tokenIds.current();
-    //     _safeMint(msg.sender, newTokenID);
-    //     _tokenIds.increment();
-    // }
-    
     
     function withdraw() public payable onlyOwner {
         uint balance = address(this).balance;

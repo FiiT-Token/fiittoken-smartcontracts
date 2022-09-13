@@ -9,22 +9,24 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
+  const [owner] = await ethers.getSigners();
+
   const FiitTokenDrakonPlusContract = await ethers.getContractFactory(
     "FiitTokenDrakonPlus"
   );
   const fiitTokenDrakonPlus = await FiitTokenDrakonPlusContract.deploy();
 
-  const txHash = fiitTokenDrakonPlus.deployTransaction.hash;
-  const txReceipt = await ethers.provider.waitForTransaction(txHash);
-
   console.log("nft deployed to:", fiitTokenDrakonPlus.address);
-  console.log("Contract deployed to address:", txReceipt.contractAddress);
-  console.log(
-    "Checkout nft Token code via: " +
-      process.env.MUMBAI_TESTNET_URL +
-      "address/" +
-      fiitTokenDrakonPlus.address
+
+  const NftConverterContract = await ethers.getContractFactory("NftConverter");
+  const nftConverterContract = await NftConverterContract.deploy(
+    fiitTokenDrakonPlus.address,
+    owner.address
   );
+
+  console.log("owner: ", owner.address);
+
+  console.log("nft converter deployed to:", nftConverterContract.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
