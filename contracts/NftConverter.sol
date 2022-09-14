@@ -15,10 +15,7 @@ contract NftConverter is Ownable {
     address public nftAddress;
     address public nftOwnerAddress;
     
-    constructor(address _nftAddress, address _nftOwnerAddress) {
-        nftAddress = _nftAddress;
-        nftOwnerAddress = _nftOwnerAddress;
-    }
+    constructor() {}
 
     function recoverSigner(bytes32 hash, bytes memory signature) public pure returns (address) {
         bytes32 messageDigest = keccak256(
@@ -35,20 +32,52 @@ contract NftConverter is Ownable {
     function getMessageHash(
         address to,
         uint256 tokenId,
+        string memory operator,
         uint256 nonce
     ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(to, tokenId, nonce));
+        return keccak256(abi.encodePacked(to, tokenId, operator, nonce));
     }
 
     function exportNft(uint tokenId, uint256 nonce, bytes memory signature) public {
         bytes32 messageHash = getMessageHash(
             msg.sender,
             tokenId, // token id
+            "export",
             nonce
         );
 
         require(recoverSigner(messageHash, signature) == nftOwnerAddress, "Export: Invalid signature");
 
         IERC721A(nftAddress).safeTransferFrom(nftOwnerAddress, msg.sender, tokenId, "");
+    }
+
+    function importNft(uint tokenId, uint256 nonce, bytes memory signature) public {
+        bytes32 messageHash = getMessageHash(
+            msg.sender,
+            tokenId, // token id
+            "import",
+            nonce
+        );
+
+        require(recoverSigner(messageHash, signature) == msg.sender, "Export: Invalid signature");
+
+        IERC721A(nftAddress).safeTransferFrom(msg.sender, nftOwnerAddress, tokenId, "");
+    }
+
+    function setNftAddress(address _nftAddress) public {
+        nftAddress = _nftAddress;
+    }
+
+    function getNftAddress() public view returns(address) {
+        return nftAddress;
+    }
+    
+
+    function setNftOwnerAddress(address _nftOwnerAddress) public {
+        nftOwnerAddress = _nftOwnerAddress;
+    }
+
+    function getNftOwnerAddress() public view returns(address) {
+        return nftOwnerAddress;
     }
 }

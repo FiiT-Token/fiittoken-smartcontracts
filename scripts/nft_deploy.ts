@@ -9,22 +9,8 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-  const [owner] = await ethers.getSigners();
-
-  const FiitTokenDrakonPlusContract = await ethers.getContractFactory(
-    "FiitTokenDrakonPlus"
-  );
-  const fiitTokenDrakonPlus = await FiitTokenDrakonPlusContract.deploy();
-
-  console.log("nft deployed to:", fiitTokenDrakonPlus.address);
-
   const NftConverterContract = await ethers.getContractFactory("NftConverter");
-  const nftConverterContract = await NftConverterContract.deploy(
-    fiitTokenDrakonPlus.address,
-    owner.address
-  );
-
-  console.log("owner: ", owner.address);
+  const nftConverterContract = await NftConverterContract.deploy();
 
   console.log("nft converter deployed to:", nftConverterContract.address);
 }
