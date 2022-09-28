@@ -33,33 +33,40 @@ contract NftConverter is Ownable {
         address to,
         uint256 tokenId,
         string memory operator,
-        uint256 nonce
+        uint256 nonce,
+        uint256 expiredAt
     ) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(to, tokenId, operator, nonce));
+        return keccak256(abi.encodePacked(to, tokenId, operator, nonce, expiredAt));
     }
 
-    function exportNft(uint tokenId, uint256 nonce, bytes memory signature) public {
+    function exportNft(uint tokenId, uint256 nonce, uint256 expiredAt, bytes memory signature) public {
         bytes32 messageHash = getMessageHash(
             msg.sender,
             tokenId, // token id
             "export",
-            nonce
+            nonce,
+            expiredAt
         );
 
         require(recoverSigner(messageHash, signature) == nftOwnerAddress, "Export: Invalid signature");
 
+        require(expiredAt >= block.timestamp, "Export: Transaction Expired");
+
         IERC721A(nftAddress).safeTransferFrom(nftOwnerAddress, msg.sender, tokenId, "");
     }
 
-    function importNft(uint tokenId, uint256 nonce, bytes memory signature) public {
+    function importNft(uint tokenId, uint256 nonce, uint256 expiredAt, bytes memory signature) public {
         bytes32 messageHash = getMessageHash(
             msg.sender,
             tokenId, // token id
             "import",
-            nonce
+            nonce,
+            expiredAt
         );
 
         require(recoverSigner(messageHash, signature) == msg.sender, "Export: Invalid signature");
+
+        require(expiredAt >= block.timestamp, "Import: Transaction Expired");
 
         IERC721A(nftAddress).safeTransferFrom(msg.sender, nftOwnerAddress, tokenId, "");
     }

@@ -11,7 +11,7 @@ describe("Verify Contract", function () {
   let drakonContract1: any;
   let nftConverterContact: any;
 
-  const exportNft = async (tokenId: number) => {
+  const exportNft = async (tokenId: number, expiredTime: number) => {
     const amount = 1;
     const nonce = 1;
     await drakonContract.reserveNFTs(amount);
@@ -21,7 +21,8 @@ describe("Verify Contract", function () {
       addr1.address,
       tokenId, // token id
       "export",
-      nonce // nonce
+      nonce, // nonce
+      expiredTime
     );
 
     // set approve for nft converter contact can transfer owner to another address
@@ -33,10 +34,10 @@ describe("Verify Contract", function () {
 
     await nftConverterContact
       .connect(addr1)
-      .exportNft(tokenId, nonce, signature);
+      .exportNft(tokenId, nonce, expiredTime, signature);
   };
 
-  const importNft = async (tokenId: number) => {
+  const importNft = async (tokenId: number, expiredTime: number) => {
     const nonce = 1;
 
     // Compute hash of the address
@@ -44,7 +45,8 @@ describe("Verify Contract", function () {
       addr1.address,
       tokenId, // token id
       "import",
-      nonce // nonce
+      nonce, // nonce
+      expiredTime
     );
 
     // set approve for nft converter contact can transfer owner to another address
@@ -54,12 +56,11 @@ describe("Verify Contract", function () {
 
     // Sign the hashed address
     const messageBytes = ethers.utils.arrayify(messageHash);
-    console.log("messageBytes: ", messageBytes);
     const signature = await addr1.signMessage(messageBytes);
 
     await nftConverterContact
       .connect(addr1)
-      .importNft(tokenId, nonce, signature);
+      .importNft(tokenId, nonce, expiredTime, signature);
   };
 
   beforeEach("deploy contract", async () => {
@@ -95,7 +96,12 @@ describe("Verify Contract", function () {
 
   it("2) Success Export: Export Nft", async function () {
     const tokenId = 0;
-    await exportNft(tokenId);
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    await exportNft(tokenId, expiredTime);
     const tokenOneOwnerAddress = await drakonContract.ownerOf(tokenId);
 
     expect(tokenOneOwnerAddress).to.equal(addr1.address);
@@ -107,12 +113,18 @@ describe("Verify Contract", function () {
     const nonce = 1;
     await drakonContract.reserveNFTs(amount);
 
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
     // Compute hash of the address
     const messageHash = await nftConverterContact.getMessageHash(
       addr1.address,
       tokenId, // token id
       "export",
-      nonce // nonce
+      nonce, // nonce
+      expiredTime
     );
 
     // set approve for nft converter contact can transfer owner to another address
@@ -123,7 +135,9 @@ describe("Verify Contract", function () {
     const signature = await owner.signMessage(messageBytes);
 
     await expect(
-      nftConverterContact.connect(addr2).exportNft(tokenId, nonce, signature)
+      nftConverterContact
+        .connect(addr2)
+        .exportNft(tokenId, nonce, expiredTime, signature)
     ).to.be.revertedWith("Export: Invalid signature");
   });
 
@@ -133,12 +147,18 @@ describe("Verify Contract", function () {
     const nonce = 1;
     await drakonContract.reserveNFTs(amount);
 
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
     // Compute hash of the address
     const messageHash = await nftConverterContact.getMessageHash(
       addr1.address,
       tokenId, // token id
       "export",
-      nonce // nonce
+      nonce, // nonce
+      expiredTime
     );
 
     // set approve for nft converter contact can transfer owner to another address
@@ -149,22 +169,60 @@ describe("Verify Contract", function () {
     const signature = await addr1.signMessage(messageBytes);
 
     await expect(
-      nftConverterContact.connect(addr2).exportNft(tokenId, nonce, signature)
+      nftConverterContact
+        .connect(addr2)
+        .exportNft(tokenId, nonce, expiredTime, signature)
     ).to.be.revertedWith("Export: Invalid signature");
   });
 
-  it("5) Success Import: Import NFT", async function () {
+  it("5) Failed Export: Timeout", async function () {
+    const amount = 1;
     const tokenId = 0;
-    await exportNft(tokenId);
+    await drakonContract.reserveNFTs(amount);
 
-    await importNft(tokenId);
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() - timeout) / 1000); // unix timestamp
+
+    await expect(exportNft(tokenId, expiredTime)).to.be.revertedWith(
+      "Export: Transaction Expired"
+    );
+  });
+
+  it("6) Success Import: Import NFT", async function () {
+    const tokenId = 0;
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    await exportNft(tokenId, expiredTime);
+
+    await importNft(tokenId, expiredTime);
 
     const tokenOneOwnerAddress = await drakonContract.ownerOf(tokenId);
 
     expect(tokenOneOwnerAddress).to.equal(owner.address);
   });
 
-  it("6) Success: Set nft address", async function () {
+  it("7) Failed Import: Timeout", async function () {
+    const tokenId = 0;
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    let expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    await exportNft(tokenId, expiredTime);
+
+    expiredTime = Math.floor((endDate.getTime() - timeout) / 1000); // unix timestamp
+
+    await expect(importNft(tokenId, expiredTime)).to.be.revertedWith(
+      "Import: Transaction Expired"
+    );
+  });
+
+  it("7) Success: Set nft address", async function () {
     await nftConverterContact.setNftAddress(drakonContract1.address);
     const nftAddr = await nftConverterContact.getNftAddress();
 

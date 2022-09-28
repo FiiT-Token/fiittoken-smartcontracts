@@ -9,10 +9,15 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
-  const NftConverterContract = await ethers.getContractFactory("NftConverter");
-  const nftConverterContract = await NftConverterContract.deploy();
+  const FiitTokenDrakonPlusContract = await ethers.getContractFactory(
+    "FiitTokenDrakonPlus"
+  );
+  const fiitTokenDrakonPlus = await FiitTokenDrakonPlusContract.deploy();
 
-  console.log("nft converter deployed to:", nftConverterContract.address);
+  // const NftConverterContract = await ethers.getContractFactory("NftConverter");
+  // const nftConverterContract = await NftConverterContract.deploy();
+
+  console.log("nft deployed to:", fiitTokenDrakonPlus.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
