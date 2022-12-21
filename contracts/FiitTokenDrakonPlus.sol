@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -20,7 +20,7 @@ contract FiitTokenDrakonPlus is ERC721A, Ownable {
     
     string public baseTokenURI;
     
-    constructor() ERC721A("FiitTokenDrakonPlus", "FTDP") {}
+    constructor() ERC721A("FiitTokenDrakon+", "DKP") {}
 
     function reserveNFTs(uint256 amount) public onlyOwner {
         uint totalMinted = _tokenIds.current();

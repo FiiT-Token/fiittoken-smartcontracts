@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -14,6 +14,7 @@ contract NftConverter is Ownable {
     string public baseTokenURI;
     address public nftAddress;
     address public nftOwnerAddress;
+    mapping(bytes => bool) private _signatureUseds;
     
     constructor() {}
 
@@ -39,7 +40,10 @@ contract NftConverter is Ownable {
         return keccak256(abi.encodePacked(to, tokenId, operator, nonce, expiredAt));
     }
 
-    function exportNft(uint tokenId, uint256 nonce, uint256 expiredAt, bytes memory signature) public {
+    function exportNft(uint tokenId, uint256 nonce, uint256 expiredAt, bytes memory signature) external {
+        require(_signatureUseds[signature] == false, "Export: Signature is already used");
+        _signatureUseds[signature] = true;
+
         bytes32 messageHash = getMessageHash(
             msg.sender,
             tokenId, // token id
@@ -55,7 +59,10 @@ contract NftConverter is Ownable {
         IERC721A(nftAddress).safeTransferFrom(nftOwnerAddress, msg.sender, tokenId, "");
     }
 
-    function importNft(uint tokenId, uint256 nonce, uint256 expiredAt, bytes memory signature) public {
+    function importNft(uint tokenId, uint256 nonce, uint256 expiredAt, bytes memory signature) external {
+        require(_signatureUseds[signature] == false, "Import: Signature is already used");
+        _signatureUseds[signature] = true;
+
         bytes32 messageHash = getMessageHash(
             msg.sender,
             tokenId, // token id
@@ -64,27 +71,27 @@ contract NftConverter is Ownable {
             expiredAt
         );
 
-        require(recoverSigner(messageHash, signature) == msg.sender, "Export: Invalid signature");
+        require(recoverSigner(messageHash, signature) == msg.sender, "Import: Invalid signature");
 
         require(expiredAt >= block.timestamp, "Import: Transaction Expired");
 
         IERC721A(nftAddress).safeTransferFrom(msg.sender, nftOwnerAddress, tokenId, "");
     }
 
-    function setNftAddress(address _nftAddress) public {
+    function setNftAddress(address _nftAddress) external onlyOwner{
         nftAddress = _nftAddress;
     }
 
-    function getNftAddress() public view returns(address) {
+    function getNftAddress() external view returns(address) {
         return nftAddress;
     }
     
 
-    function setNftOwnerAddress(address _nftOwnerAddress) public {
+    function setNftOwnerAddress(address _nftOwnerAddress) external onlyOwner {
         nftOwnerAddress = _nftOwnerAddress;
     }
 
-    function getNftOwnerAddress() public view returns(address) {
+    function getNftOwnerAddress() external view returns(address) {
         return nftOwnerAddress;
     }
 }

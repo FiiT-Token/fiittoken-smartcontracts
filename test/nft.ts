@@ -35,6 +35,8 @@ describe("Verify Contract", function () {
     await nftConverterContact
       .connect(addr1)
       .exportNft(tokenId, nonce, expiredTime, signature);
+
+    return { signature, nonce };
   };
 
   const importNft = async (tokenId: number, expiredTime: number) => {
@@ -61,6 +63,8 @@ describe("Verify Contract", function () {
     await nftConverterContact
       .connect(addr1)
       .importNft(tokenId, nonce, expiredTime, signature);
+
+    return { nonce, signature };
   };
 
   beforeEach("deploy contract", async () => {
@@ -222,10 +226,55 @@ describe("Verify Contract", function () {
     );
   });
 
-  it("7) Success: Set nft address", async function () {
+  it("8) Success: Set nft address", async function () {
     await nftConverterContact.setNftAddress(drakonContract1.address);
     const nftAddr = await nftConverterContact.getNftAddress();
 
     expect(drakonContract1.address).to.equal(nftAddr);
+  });
+
+  it("9) Failed: Set nft address", async function () {
+    await expect(
+      nftConverterContact.connect(addr1).setNftAddress(drakonContract1.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
+  it("10) Failed: Set nft owner address", async function () {
+    await expect(
+      nftConverterContact.connect(addr1).setNftOwnerAddress(owner.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
+  it("11) Failed Export: Use signature more than once", async function () {
+    const tokenId = 0;
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    const { signature, nonce } = await exportNft(tokenId, expiredTime);
+
+    await expect(
+      nftConverterContact
+        .connect(addr1)
+        .exportNft(tokenId, nonce, expiredTime, signature)
+    ).to.be.revertedWith("Export: Signature is already used");
+  });
+
+  it("12) Failed Import: Use signature more than once", async function () {
+    const tokenId = 0;
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    await exportNft(tokenId, expiredTime);
+    const { signature, nonce } = await importNft(tokenId, expiredTime);
+
+    await expect(
+      nftConverterContact
+        .connect(addr1)
+        .importNft(tokenId, nonce, expiredTime, signature)
+    ).to.be.revertedWith("Import: Signature is already used");
   });
 });
