@@ -1,7 +1,7 @@
 
 //SPDX-License-Identifier: Unlicense
 
-pragma solidity ^0.8.3;
+pragma solidity 0.8.17;
 
 import { Ownable as OwnableOpenzeppelin } from "@openzeppelin/contracts/access/Ownable.sol";
 

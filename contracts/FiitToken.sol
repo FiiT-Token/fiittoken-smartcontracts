@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 // IBEP20 Interface code from // Ref: https://github.com/binance-chain/bsc-genesis-contract/blob/3b1ed714e189a8fa4b482211f0a07053517b0dde/contracts/interface/IBEP20.sol
 
-pragma solidity ^0.8.3;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
