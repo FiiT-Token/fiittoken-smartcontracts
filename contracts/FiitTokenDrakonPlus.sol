@@ -20,28 +20,16 @@ contract FiitTokenDrakonPlus is ERC721A, Ownable {
     
     string public baseTokenURI;
     
-    constructor() ERC721A("FiitTokenDrakon+", "DKP") {}
+    constructor(
+        string memory _baseTokenURI
+    ) ERC721A("FiitTokenDrakon+", "DKP") {
+        baseTokenURI = _baseTokenURI;
 
-    function reserveNFTs(uint256 amount) external onlyOwner {
-        require(totalSupply() + amount <= MAX_SUPPLY, "Not enough NFTs left to reserve");
-
-        _safeMint(msg.sender, amount);
+        _safeMint(msg.sender, MAX_SUPPLY);
     }
     
     function _baseURI() internal view virtual override returns (string memory) {
         return baseTokenURI;
-    }
-
-   function setBaseURI(string memory _baseTokenURI) external onlyOwner {
-        baseTokenURI = _baseTokenURI;
-    }
-    
-    function mintNFTs(uint _count) external onlyOwner payable  {
-        require(totalSupply() + _count <= MAX_SUPPLY, "Not enough NFTs left!");
-        require(_count >0 && _count <= MAX_PER_MINT, "Cannot mint specified number of NFTs.");
-        require(msg.value >= PRICE.mul(_count), "Not enough ether to purchase NFTs.");
-
-        _safeMint(msg.sender, _count);
     }
     
     function withdraw() external payable onlyOwner {

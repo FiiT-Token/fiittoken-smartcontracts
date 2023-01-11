@@ -16,7 +16,13 @@ contract NftConverter is Ownable {
     address public nftOwnerAddress;
     mapping(bytes => bool) private _signatureUseds;
     
-    constructor() {}
+    constructor(
+        address _nftAddress,
+        address _nftOwnerAddress
+    ) {
+      nftAddress = _nftAddress;
+      nftOwnerAddress = _nftOwnerAddress;
+    }
 
     function recoverSigner(bytes32 hash, bytes memory signature) public pure returns (address) {
         bytes32 messageDigest = keccak256(
@@ -78,19 +84,11 @@ contract NftConverter is Ownable {
         IERC721A(nftAddress).safeTransferFrom(msg.sender, nftOwnerAddress, tokenId, "");
     }
 
-    function setNftAddress(address _nftAddress) external onlyOwner{
-        nftAddress = _nftAddress;
-    }
 
     function getNftAddress() external view returns(address) {
         return nftAddress;
     }
     
-
-    function setNftOwnerAddress(address _nftOwnerAddress) external onlyOwner {
-        nftOwnerAddress = _nftOwnerAddress;
-    }
-
     function getNftOwnerAddress() external view returns(address) {
         return nftOwnerAddress;
     }

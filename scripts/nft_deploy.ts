@@ -12,12 +12,18 @@ async function main() {
   const FiitTokenDrakonPlusContract = await ethers.getContractFactory(
     "FiitTokenDrakonPlus"
   );
-  const fiitTokenDrakonPlus = await FiitTokenDrakonPlusContract.deploy();
+  const fiitTokenDrakonPlus = await FiitTokenDrakonPlusContract.deploy(
+    "https://api-game.fiittoken.io/backend/api/nft-converter/metadata/"
+  );
 
-  // const NftConverterContract = await ethers.getContractFactory("NftConverter");
-  // const nftConverterContract = await NftConverterContract.deploy();
+  const NftConverterContract = await ethers.getContractFactory("NftConverter");
+  const nftConverterContract = await NftConverterContract.deploy(
+    fiitTokenDrakonPlus.address,
+    "0xe90e019DB5868bD6E923d634715B3Ca430CdF90D"
+  );
 
   console.log("nft deployed to:", fiitTokenDrakonPlus.address);
+  console.log("nft convertor deployed to:", nftConverterContract.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

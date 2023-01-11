@@ -12,9 +12,7 @@ describe("Verify Contract", function () {
   let nftConverterContact: any;
 
   const exportNft = async (tokenId: number, expiredTime: number) => {
-    const amount = 1;
     const nonce = 1;
-    await drakonContract.reserveNFTs(amount);
 
     // Compute hash of the address
     const messageHash = await nftConverterContact.getMessageHash(
@@ -74,31 +72,27 @@ describe("Verify Contract", function () {
       "FiitTokenDrakonPlus"
     );
 
-    drakonContract = await FiitTokenDrakonPlusContact.deploy();
+    drakonContract = await FiitTokenDrakonPlusContact.deploy(
+      "http://localhost:3000"
+    );
     await drakonContract.deployed();
 
-    drakonContract1 = await FiitTokenDrakonPlusContact.deploy();
+    drakonContract1 = await FiitTokenDrakonPlusContact.deploy(
+      "http://localhost:3000"
+    );
     await drakonContract1.deployed();
 
     const NftConverterContact = await ethers.getContractFactory("NftConverter");
 
-    nftConverterContact = await NftConverterContact.deploy();
+    nftConverterContact = await NftConverterContact.deploy(
+      drakonContract.address,
+      owner.address
+    );
 
     await nftConverterContact.deployed();
-    nftConverterContact.setNftAddress(drakonContract.address);
-    nftConverterContact.setNftOwnerAddress(owner.address);
   });
 
-  it("1) Success: Reserved Nft", async function () {
-    const amount = 200;
-    await drakonContract.reserveNFTs(amount);
-
-    const balance = await drakonContract.balanceOf(owner.address);
-
-    expect(balance.toNumber()).to.equal(amount);
-  });
-
-  it("2) Success Export: Export Nft", async function () {
+  it("Success Export: Export Nft", async function () {
     const tokenId = 0;
     const timeout = 300000; // 5 mins
 
@@ -111,11 +105,9 @@ describe("Verify Contract", function () {
     expect(tokenOneOwnerAddress).to.equal(addr1.address);
   });
 
-  it("3) Failed Export: Address request signature not same with address use signature", async function () {
-    const amount = 1;
+  it("Failed Export: Address request signature not same with address use signature", async function () {
     const tokenId = 0;
     const nonce = 1;
-    await drakonContract.reserveNFTs(amount);
 
     const timeout = 300000; // 5 mins
 
@@ -145,11 +137,9 @@ describe("Verify Contract", function () {
     ).to.be.revertedWith("Export: Invalid signature");
   });
 
-  it("4) Failed Export: Wrong signer", async function () {
-    const amount = 1;
+  it("Failed Export: Wrong signer", async function () {
     const tokenId = 0;
     const nonce = 1;
-    await drakonContract.reserveNFTs(amount);
 
     const timeout = 300000; // 5 mins
 
@@ -179,10 +169,8 @@ describe("Verify Contract", function () {
     ).to.be.revertedWith("Export: Invalid signature");
   });
 
-  it("5) Failed Export: Timeout", async function () {
-    const amount = 1;
+  it("Failed Export: Timeout", async function () {
     const tokenId = 0;
-    await drakonContract.reserveNFTs(amount);
 
     const timeout = 300000; // 5 mins
 
@@ -194,58 +182,7 @@ describe("Verify Contract", function () {
     );
   });
 
-  it("6) Success Import: Import NFT", async function () {
-    const tokenId = 0;
-    const timeout = 300000; // 5 mins
-
-    const endDate = new Date(); // now
-    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
-
-    await exportNft(tokenId, expiredTime);
-
-    await importNft(tokenId, expiredTime);
-
-    const tokenOneOwnerAddress = await drakonContract.ownerOf(tokenId);
-
-    expect(tokenOneOwnerAddress).to.equal(owner.address);
-  });
-
-  it("7) Failed Import: Timeout", async function () {
-    const tokenId = 0;
-    const timeout = 300000; // 5 mins
-
-    const endDate = new Date(); // now
-    let expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
-
-    await exportNft(tokenId, expiredTime);
-
-    expiredTime = Math.floor((endDate.getTime() - timeout) / 1000); // unix timestamp
-
-    await expect(importNft(tokenId, expiredTime)).to.be.revertedWith(
-      "Import: Transaction Expired"
-    );
-  });
-
-  it("8) Success: Set nft address", async function () {
-    await nftConverterContact.setNftAddress(drakonContract1.address);
-    const nftAddr = await nftConverterContact.getNftAddress();
-
-    expect(drakonContract1.address).to.equal(nftAddr);
-  });
-
-  it("9) Failed: Set nft address", async function () {
-    await expect(
-      nftConverterContact.connect(addr1).setNftAddress(drakonContract1.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-  });
-
-  it("10) Failed: Set nft owner address", async function () {
-    await expect(
-      nftConverterContact.connect(addr1).setNftOwnerAddress(owner.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-  });
-
-  it("11) Failed Export: Use signature more than once", async function () {
+  it("Failed Export: Use signature more than once", async function () {
     const tokenId = 0;
     const timeout = 300000; // 5 mins
 
@@ -261,7 +198,39 @@ describe("Verify Contract", function () {
     ).to.be.revertedWith("Export: Signature is already used");
   });
 
-  it("12) Failed Import: Use signature more than once", async function () {
+  it("Success Import: Import NFT", async function () {
+    const tokenId = 0;
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    const expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    await exportNft(tokenId, expiredTime);
+
+    await importNft(tokenId, expiredTime);
+
+    const tokenOneOwnerAddress = await drakonContract.ownerOf(tokenId);
+
+    expect(tokenOneOwnerAddress).to.equal(owner.address);
+  });
+
+  it("Failed Import: Timeout", async function () {
+    const tokenId = 0;
+    const timeout = 300000; // 5 mins
+
+    const endDate = new Date(); // now
+    let expiredTime = Math.floor((endDate.getTime() + timeout) / 1000); // unix timestamp
+
+    await exportNft(tokenId, expiredTime);
+
+    expiredTime = Math.floor((endDate.getTime() - timeout) / 1000); // unix timestamp
+
+    await expect(importNft(tokenId, expiredTime)).to.be.revertedWith(
+      "Import: Transaction Expired"
+    );
+  });
+
+  it("Failed Import: Use signature more than once", async function () {
     const tokenId = 0;
     const timeout = 300000; // 5 mins
 
